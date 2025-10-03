@@ -96,6 +96,19 @@
       <version>3.27.3</version>
       <scope>test</scope>
     </dependency>
+    <!-- Mockito for mocking in unit tests -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.14.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>5.14.2</version>
+      <scope>test</scope>
+    </dependency>
     <!-- Arquillian dependencies -->
     <dependency>
       <groupId>org.jboss.arquillian.junit5</groupId>
@@ -422,9 +435,83 @@
           <type>pom</type>
           <scope>test</scope>
         </dependency>
+        
+        <!-- LangChain4j Core -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+            <version>0.35.0</version>
+        </dependency>
+
+        <!-- LangChain4j Azure OpenAI -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-azure-open-ai</artifactId>
+            <version>0.35.0</version>
+        </dependency>
+
+        <!-- LangChain4j Qdrant -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-qdrant</artifactId>
+            <version>0.35.0</version>
+        </dependency>
+
+        <!-- LangChain4j Embeddings -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-embeddings</artifactId>
+            <version>0.35.0</version>
+        </dependency>
+
+        <!-- Document parsing (for auto-fill) -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-document-parser-apache-pdfbox</artifactId>
+            <version>0.35.0</version>
+        </dependency>
+        
+        <!-- Guava - explicitly declared for Liberty shared library -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.0.0-jre</version>
+        </dependency>
+        
+        <!-- Failureaccess - required by Guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>failureaccess</artifactId>
+            <version>1.0.2</version>
+        </dependency>
       </dependencies>
       <build>
         <plugins>
+        <!-- Copy all runtime dependencies to Liberty shared resources -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>${dependency.plugin.version}</version>
+            <executions>
+              <execution>
+                <id>copy-dependencies</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>copy-dependencies</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${project.build.directory}/liberty/wlp/usr/shared/resources</outputDirectory>
+                  <includeScope>compile</includeScope>
+                  <excludeScope>provided</excludeScope>
+                  <excludeGroupIds>jakarta.platform,org.jboss.arquillian,org.jboss.shrinkwrap,jakarta.activation,jakarta.annotation,jakarta.authentication,jakarta.authorization,jakarta.batch,jakarta.ejb,jakarta.el,jakarta.enterprise,jakarta.faces,jakarta.inject,jakarta.interceptor,jakarta.jms,jakarta.json,jakarta.json.bind,jakarta.mail,jakarta.persistence,jakarta.resource,jakarta.security.auth.message,jakarta.security.enterprise,jakarta.servlet,jakarta.transaction,jakarta.validation,jakarta.websocket,jakarta.ws.rs,jakarta.xml.bind</excludeGroupIds>
+                  <excludeArtifactIds>junit-jupiter,junit-jupiter-api,junit-jupiter-engine,hamcrest,assertj-core,mockito-core,mockito-junit-jupiter</excludeArtifactIds>
+                  <overWriteReleases>true</overWriteReleases>
+                  <overWriteSnapshots>true</overWriteSnapshots>
+                  <overWriteIfNewer>true</overWriteIfNewer>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
         <!-- Enable liberty-maven plugin -->
           <plugin>
             <groupId>io.openliberty.tools</groupId>

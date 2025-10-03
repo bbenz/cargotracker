@@ -32,6 +32,14 @@
 
   <variable defaultValue="8080" name="default.http.port"/>
   <variable defaultValue="8081" name="default.https.port"/>
+  
+  <!-- AI Feature Configuration -->
+  <variable name="azure.openai.endpoint" defaultValue="${env.AZURE_OPENAI_ENDPOINT}"/>
+  <variable name="azure.openai.key" defaultValue="${env.AZURE_OPENAI_KEY}"/>
+  <variable name="azure.openai.deployment" defaultValue="${env.AZURE_OPENAI_DEPLOYMENT_NAME}"/>
+  <variable name="azure.openai.embedding.deployment" defaultValue="${env.AZURE_OPENAI_EMBEDDING_DEPLOYMENT}"/>
+  <variable name="qdrant.host" defaultValue="${env.QDRANT_HOST:localhost}"/>
+  <variable name="qdrant.port" defaultValue="${env.QDRANT_PORT:6333}"/>
 
   <httpEndpoint host="*" httpPort="${default.http.port}" httpsPort="${default.https.port}" id="defaultHttpEndpoint"/>
   <wasJmsEndpoint host="*" id="InboundJmsCommsEndpoint" wasJmsPort="7276" wasJmsSSLPort="9100"/> 
@@ -102,6 +110,11 @@
   <library id="dbLib">
     <fileset dir="${shared.resource.dir}" includes="hsqldb*.jar"/>
   </library>
+  
+  <!-- LangChain4j library for AI features (includes all transitive dependencies) -->
+  <library id="aiLib">
+    <fileset dir="${shared.resource.dir}" includes="*.jar" excludes="hsqldb*.jar"/>
+  </library>
 
   <dataSource id="cargoTrackerDataStore" jndiName="jdbc/CargoTrackerDatabase">
     <jdbcDriver libraryRef="dbLib"/>
@@ -123,7 +136,7 @@
   </ejbContainer>
 
   <webApplication contextRoot="cargo-tracker" location="cargo-tracker.war">
-    <classloader commonLibraryRef="dbLib"/>
+    <classloader commonLibraryRef="dbLib,aiLib"/>
     <web-bnd moduleName="cargo-tracker">
       <env-entry name="java:app/configuration/GraphTraversalUrl" value="http://localhost:8080/cargo-tracker/rest/graph-traversal/shortest-path"/>
     </web-bnd>
