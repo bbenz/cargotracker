@@ -21,11 +21,20 @@ public class AiConfiguration {
   }
 
   public String chatModel() {
-    return optional("ai.chat.model", "gpt-5-mini");
+    return optional("ai.chat.model", "gpt-6.1-sol");
+  }
+
+  /** "responses" for the OpenAI Responses API, or "chat-completions". */
+  public String api() {
+    return optional("ai.api", AiSettings.RESPONSES);
+  }
+
+  public String reasoningEffort() {
+    return optional("ai.reasoning-effort", "");
   }
 
   public int timeoutSeconds() {
-    return config().getOptionalValue("ai.timeout-seconds", Integer.class).orElse(10);
+    return config().getOptionalValue("ai.timeout-seconds", Integer.class).orElse(20);
   }
 
   public Path docsDir() {
@@ -34,6 +43,11 @@ public class AiConfiguration {
 
   public boolean configured() {
     return enabled() && !apiKey().isBlank() && !baseUrl().isBlank() && !chatModel().isBlank();
+  }
+
+  public AiSettings settings() {
+    return new AiSettings(
+        baseUrl(), apiKey(), chatModel(), api(), reasoningEffort(), timeoutSeconds());
   }
 
   private String optional(String name, String defaultValue) {

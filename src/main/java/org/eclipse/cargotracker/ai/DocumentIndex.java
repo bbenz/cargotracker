@@ -6,6 +6,7 @@ import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
+import dev.langchain4j.rag.content.Content;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.store.embedding.EmbeddingStore;
@@ -41,6 +42,21 @@ public final class DocumentIndex {
             .maxResults(5)
             .minScore(0.7)
             .build();
-    return new TracingContentRetriever(retriever, tracer);
+    return new TracingContentRetriever(labeled(retriever), tracer);
+  }
+
+  /** Puts the file name in front of each passage, so the model can cite the source. */
+  private static ContentRetriever labeled(ContentRetriever retriever) {
+    return query -> retriever.retrieve(query).stream().map(DocumentIndex::label).toList();
+  }
+
+  private static Content label(Content content) {
+    TextSegment segment = content.textSegment();
+    String source = segment.metadata().getString(Document.FILE_NAME);
+    if (source == null) {
+      return content;
+    }
+    return Content.from(
+        TextSegment.from("Source: " + source + "\n" + segment.text(), segment.metadata()));
   }
 }

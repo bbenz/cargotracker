@@ -1,13 +1,39 @@
 package org.eclipse.cargotracker.ai;
 
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.guardrail.GuardrailRequestParams;
 import dev.langchain4j.guardrail.InputGuardrail;
+import dev.langchain4j.guardrail.InputGuardrailRequest;
 import dev.langchain4j.guardrail.InputGuardrailResult;
+import dev.langchain4j.invocation.InvocationContext;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class StaysOnTopic implements InputGuardrail {
+
+  /**
+   * LangChain4j adds the document search results to the user message before input guards run. Check
+   * the question the user typed, not the longer message with the documents in it.
+   */
+  @Override
+  public InputGuardrailResult validate(InputGuardrailRequest request) {
+    return validate(UserMessage.from(typedQuestion(request)));
+  }
+
+  static String typedQuestion(InputGuardrailRequest request) {
+    GuardrailRequestParams params = request.requestParams();
+    InvocationContext context = params == null ? null : params.invocationContext();
+    if (context != null && context.methodArguments() != null) {
+      for (Object argument : context.methodArguments()) {
+        if (argument instanceof CharSequence text) {
+          return text.toString();
+        }
+      }
+    }
+    String text = request.userMessage().singleText();
+    return text == null ? "" : text;
+  }
 
   private static final int MAX_LENGTH = 500;
   private static final Pattern TRACKING_ID = Pattern.compile("\\b[A-Z]{3}\\d{3}\\b");

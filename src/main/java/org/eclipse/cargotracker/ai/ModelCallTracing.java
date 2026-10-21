@@ -17,9 +17,15 @@ public class ModelCallTracing implements ChatModelListener {
   private static final String SPAN_KEY = ModelCallTracing.class.getName() + ".span";
 
   private final Tracer tracer;
+  private final String providerName;
 
   public ModelCallTracing(Tracer tracer) {
+    this(tracer, null);
+  }
+
+  public ModelCallTracing(Tracer tracer, String providerName) {
     this.tracer = tracer;
+    this.providerName = providerName;
   }
 
   @Override
@@ -87,6 +93,9 @@ public class ModelCallTracing implements ChatModelListener {
   }
 
   private String providerName(ModelProvider provider) {
+    if (providerName != null) {
+      return providerName;
+    }
     if (provider == ModelProvider.OPEN_AI) {
       return "openai";
     }

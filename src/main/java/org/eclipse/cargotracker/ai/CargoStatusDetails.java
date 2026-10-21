@@ -11,5 +11,7 @@ public record CargoStatusDetails(
     String lastKnownLocation,
     String nextExpectedActivity,
     String eta,
+    String arrivalDeadline,
     boolean misdirected,
+    String attention,
     List<String> itinerary) {}

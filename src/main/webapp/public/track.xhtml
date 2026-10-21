@@ -41,7 +41,10 @@
           })
           .then(response => response.json())
           .then(data => {
-            answer.textContent = data.answer + '\nSources: ' + (data.sources || []).join(', ');
+            const result = data.result || {};
+            answer.textContent = data.outcome === 'ANSWERED'
+              ? result.answer + '\nSources: ' + (result.sources || []).join(', ')
+              : (data.message || "I can't answer that.");
           })
           .catch(() => { answer.textContent = "I can't answer that."; });
         }

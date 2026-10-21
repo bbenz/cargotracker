@@ -8,7 +8,6 @@ import dev.langchain4j.guardrail.InputGuardrailException;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
-import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import io.opentelemetry.api.OpenTelemetry;
@@ -28,8 +27,14 @@ import org.junit.jupiter.params.provider.CsvFileSource;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CargoAssistantEvalTest {
 
-  private static final int MAX_TOKENS_PER_ANSWER = 2_500;
-  private static final long P95_LATENCY_LIMIT_MILLIS = 4_000;
+  // Defaults match the evaluation table in the talk. Set EVAL_MAX_TOKENS or EVAL_P95_MILLIS to
+  // adjust the gate for another model. Set EVAL_LIMIT to run fewer questions in a live demo.
+  private static final int MAX_TOKENS_PER_ANSWER = limit("EVAL_MAX_TOKENS", 2_500);
+  private static final long P95_LATENCY_LIMIT_MILLIS = limit("EVAL_P95_MILLIS", 4_000);
+  private static final int QUESTION_LIMIT = limit("EVAL_LIMIT", Integer.MAX_VALUE);
+
+  /** 38 of 40 in the full run. */
+  private static final double REQUIRED_SHARE_CORRECT = 0.95;
 
   private CargoAssistant guardedAssistant;
   private DocumentSourceCatalog sourceCatalog;
@@ -48,7 +53,8 @@ class CargoAssistantEvalTest {
     EvalTokenCounter tokenCounter = new EvalTokenCounter();
     CargoAssistant modelAssistant = configuredAssistant(tokenCounter);
     List<EvalResult> results = new ArrayList<>();
-    for (EvalCase evalCase : EvalCase.load("/eval/cargo-questions.csv")) {
+    for (EvalCase evalCase :
+        EvalCase.load("/eval/cargo-questions.csv").stream().limit(QUESTION_LIMIT).toList()) {
       tokenCounter.reset();
       long started = System.nanoTime();
       CargoAnswer answer = CargoAnswer.cannotAnswer();
@@ -77,8 +83,9 @@ class CargoAssistantEvalTest {
     assumeModelConfigured();
 
     long correct = modelResults.stream().filter(EvalResult::foundExpectedId).count();
+    long required = (long) Math.ceil(modelResults.size() * REQUIRED_SHARE_CORRECT);
 
-    assertThat(correct).isGreaterThanOrEqualTo(38);
+    assertThat(correct).isGreaterThanOrEqualTo(required);
   }
 
   @ParameterizedTest
@@ -136,7 +143,13 @@ class CargoAssistantEvalTest {
   }
 
   private boolean isModelConfigured() {
-    return System.getenv("AI_API_KEY") != null || System.getenv("AI_BASE_URL") != null;
+    String apiKey = System.getenv("AI_API_KEY");
+    return apiKey != null && !apiKey.isBlank();
+  }
+
+  private static int limit(String name, int defaultValue) {
+    String value = System.getenv(name);
+    return value == null || value.isBlank() ? defaultValue : Integer.parseInt(value.trim());
   }
 
   private int percentileIndex(int size, double percentile) {
@@ -144,18 +157,9 @@ class CargoAssistantEvalTest {
   }
 
   private CargoAssistant configuredAssistant(EvalTokenCounter tokenCounter) {
-    String baseUrl = System.getenv().getOrDefault("AI_BASE_URL", "https://api.openai.com/v1");
-    String apiKey = System.getenv().getOrDefault("AI_API_KEY", "not-used");
-    String model = System.getenv().getOrDefault("AI_CHAT_MODEL", "gpt-5-mini");
+    // The same factory and setting names as the application.
     ChatModel chatModel =
-        OpenAiChatModel.builder()
-            .baseUrl(baseUrl)
-            .apiKey(apiKey)
-            .modelName(model)
-            .timeout(Duration.ofSeconds(10))
-            .maxRetries(1)
-            .listeners(tokenCounter)
-            .build();
+        ChatModels.create(AiSettings.fromEnvironment(System.getenv()), List.of(tokenCounter));
     ContentRetriever docs =
         DocumentIndex.build(
             Path.of("src/main/ai-docs"), sourceCatalog, OpenTelemetry.noop().getTracer("eval"));
