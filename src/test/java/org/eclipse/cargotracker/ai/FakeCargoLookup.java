@@ -1,23 +1,29 @@
 package org.eclipse.cargotracker.ai;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-/** The four sample cargo from Cargo Tracker, without a database. */
+/**
+ * The four sample cargo from Cargo Tracker, without a database. Dates follow SampleDataGenerator,
+ * so questions about deadlines and ETAs have real answers.
+ */
 class FakeCargoLookup implements CargoLookup {
 
   private static final String NONE = "none";
+  private static final String UNKNOWN = "unknown";
 
   private final Map<String, CargoStatusDetails> cargos;
 
   FakeCargoLookup() {
+    LocalDate today = LocalDate.now();
     cargos =
         Map.of(
             "ABC123",
-            details(
+            new CargoStatusDetails(
                 "ABC123",
                 "Hong Kong",
                 "Helsinki",
@@ -25,10 +31,16 @@ class FakeCargoLookup implements CargoLookup {
                 "IN_PORT",
                 "New York",
                 "LOAD in New York on 0200T",
+                today.plusDays(14).atTime(12, 0).toString(),
+                today.plusDays(15).toString(),
                 false,
-                NONE),
+                NONE,
+                List.of(
+                    "Hong Kong to New York on 0100S (done)",
+                    "New York to Dallas on 0200T (next)",
+                    "Dallas to Helsinki on 0300A (next)")),
             "JKL567",
-            details(
+            new CargoStatusDetails(
                 "JKL567",
                 "Hangzhou",
                 "Stockholm",
@@ -36,10 +48,16 @@ class FakeCargoLookup implements CargoLookup {
                 "ONBOARD_CARRIER",
                 "New York",
                 NONE,
+                UNKNOWN,
+                today.plusDays(18).toString(),
                 true,
-                "Loaded onto voyage 0100S in New York. That voyage is not on the planned route."),
+                "Loaded onto voyage 0100S in New York. That voyage is not on the planned route.",
+                List.of(
+                    "Hangzhou to New York on 0100S (done)",
+                    "New York to Dallas on 0200T (next)",
+                    "Dallas to Stockholm on 0300A (next)")),
             "DEF789",
-            details(
+            new CargoStatusDetails(
                 "DEF789",
                 "Hong Kong",
                 "Melbourne",
@@ -47,11 +65,25 @@ class FakeCargoLookup implements CargoLookup {
                 "NOT_RECEIVED",
                 "Hong Kong",
                 NONE,
+                UNKNOWN,
+                today.plusMonths(2).toString(),
                 false,
-                "Booked, but no route is assigned yet."),
+                "Booked, but no route is assigned yet.",
+                List.of()),
             "MNO456",
-            details(
-                "MNO456", "New York", "Dallas", "ROUTED", "CLAIMED", "Dallas", NONE, false, NONE));
+            new CargoStatusDetails(
+                "MNO456",
+                "New York",
+                "Dallas",
+                "ROUTED",
+                "CLAIMED",
+                "Dallas",
+                NONE,
+                today.minusDays(28).atTime(12, 0).toString(),
+                today.minusDays(24).toString(),
+                false,
+                NONE,
+                List.of("New York to Dallas on 0200T (done)")));
   }
 
   @Override
@@ -98,30 +130,5 @@ class FakeCargoLookup implements CargoLookup {
   private static CargoSummary summary(CargoStatusDetails cargo) {
     return new CargoSummary(
         cargo.trackingId(), cargo.origin(), cargo.destination(), cargo.transportStatus());
-  }
-
-  private static CargoStatusDetails details(
-      String trackingId,
-      String origin,
-      String destination,
-      String routingStatus,
-      String transportStatus,
-      String lastKnownLocation,
-      String nextExpectedActivity,
-      boolean misdirected,
-      String attention) {
-    return new CargoStatusDetails(
-        trackingId,
-        origin,
-        destination,
-        routingStatus,
-        transportStatus,
-        lastKnownLocation,
-        nextExpectedActivity,
-        "unknown",
-        "unknown",
-        misdirected,
-        attention,
-        List.of(origin + " to " + destination));
   }
 }
