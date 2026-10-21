@@ -1,10 +1,10 @@
 package org.eclipse.cargotracker.interfaces.booking.facade.internal.assembler;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.eclipse.cargotracker.application.util.DateConverter;
 import org.eclipse.cargotracker.domain.model.cargo.Cargo;
 import org.eclipse.cargotracker.domain.model.cargo.Delivery;
@@ -22,8 +22,7 @@ public class CargoStatusDtoAssembler {
     List<TrackingEvents> trackingEvents;
 
     trackingEvents =
-        handlingEvents
-            .stream()
+        handlingEvents.stream()
             .map(handlingEvent -> assembler.toDto(cargo, handlingEvent))
             .collect(Collectors.toList());
 
@@ -59,17 +58,13 @@ public class CargoStatusDtoAssembler {
   private String getEta(Cargo cargo) {
     LocalDateTime eta = cargo.getDelivery().getEstimatedTimeOfArrival();
 
-    if (eta == null) {
-      return "?";
-    } else {
-      return DateConverter.toString(eta);
-    }
+    return eta == null ? "?" : DateConverter.toString(eta);
   }
 
   private String getNextExpectedActivity(Cargo cargo) {
     HandlingActivity activity = cargo.getDelivery().getNextExpectedActivity();
 
-    if ((activity == null) || (activity.isEmpty())) {
+    if (activity == null || activity.isEmpty()) {
       return "";
     }
 

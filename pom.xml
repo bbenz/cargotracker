@@ -25,12 +25,7 @@
   <properties>
     <maven.compiler.release>11</maven.compiler.release>
     <jakartaee.api.version>10.0.0</jakartaee.api.version>
-    <surefire.version>3.5.2</surefire.version>
-    <dependency.plugin.version>3.8.1</dependency.plugin.version>
-    <cargo.plugin.version>1.10.18</cargo.plugin.version>
-    <h2.version>2.3.232</h2.version>
-    <payara.version>6.2025.3</payara.version>
-    <payara.arquillian.adapter.version>3.1</payara.arquillian.adapter.version>
+    <payara.version>6.2025.5</payara.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>    
   </properties>
   <dependencyManagement>
@@ -41,14 +36,28 @@
       <dependency>
         <groupId>org.jboss.arquillian</groupId>
         <artifactId>arquillian-bom</artifactId>
-        <version>1.8.0.Final</version>
+        <version>1.10.2.Final</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.arquillian.jakarta</groupId>
+        <artifactId>arquillian-jakarta-bom</artifactId>
+        <version>10.0.0.Final</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.shrinkwrap.resolver</groupId>
+        <artifactId>shrinkwrap-resolver-bom</artifactId>
+        <version>3.3.7</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.12.1</version>
+        <version>5.14.4</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -63,13 +72,9 @@
     </dependency>
     <!-- The third-party dependencies this application has -->
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.primefaces</groupId>
       <artifactId>primefaces</artifactId>
-      <version>14.0.5</version>
+      <version>15.0.4</version>
       <classifier>jakarta</classifier>
     </dependency>
     <!-- We need a Jersey specific dependency for property name constants -->
@@ -78,7 +83,7 @@
       <artifactId>jersey-server</artifactId>
       <version>3.1.10</version>
       <scope>provided</scope>
-    </dependency>    
+    </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -86,14 +91,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>3.27.3</version>
+      <version>3.27.7</version>
       <scope>test</scope>
     </dependency>
     <!-- Arquillian dependencies -->
@@ -114,12 +114,6 @@
       <artifactId>arquillian-protocol-servlet-jakarta</artifactId>
       <scope>test</scope>
     </dependency>
-    <!-- Needed for Arquillian to log -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
   <build>
     <finalName>cargo-tracker</finalName>
@@ -127,10 +121,30 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
-        <version>3.4.0</version>
+        <version>3.5.1</version>
         <configuration>
           <filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>2.43.0</version>
+        <configuration>
+          <java>
+            <googleJavaFormat>
+              <version>1.18.1</version>
+            </googleJavaFormat>
+          </java>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>apply</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -156,7 +170,7 @@
         <dependency>
           <groupId>com.h2database</groupId>
           <artifactId>h2</artifactId>
-          <version>${h2.version}</version>
+          <version>2.4.240</version>
           <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -169,14 +183,14 @@
         <dependency>
           <groupId>fish.payara.arquillian</groupId>
           <artifactId>arquillian-payara-micro-managed</artifactId>
-          <version>${payara.arquillian.adapter.version}</version>
+          <version>3.1</version>
           <scope>test</scope>
         </dependency>
         <!-- Needed at the moment for Jakarta EE 10 support -->
         <dependency>
           <groupId>fish.payara.arquillian</groupId>
           <artifactId>payara-client-ee9</artifactId>
-          <version>${payara.arquillian.adapter.version}</version>
+          <version>3.1</version>
           <scope>test</scope>
         </dependency>        
       </dependencies>
@@ -185,7 +199,7 @@
           <plugin>
             <groupId>org.codehaus.cargo</groupId>
             <artifactId>cargo-maven3-plugin</artifactId>
-            <version>${cargo.plugin.version}</version>
+            <version>1.10.28</version>
             <configuration>
               <container>
                 <containerId>payara</containerId>
@@ -204,7 +218,7 @@
     <profile>
       <id>glassfish</id>
       <properties>
-        <glassfish.version>7.0.22</glassfish.version>
+        <glassfish.version>7.0.25</glassfish.version>
         <!-- Application properties -->
         <webapp.graphTraversalUrl>http://localhost:8080/cargo-tracker/rest/graph-traversal/shortest-path</webapp.graphTraversalUrl>
         <db.driverClass>org.h2.jdbcx.JdbcDataSource</db.driverClass>
@@ -219,7 +233,7 @@
         <dependency>
           <groupId>com.h2database</groupId>
           <artifactId>h2</artifactId>
-          <version>${h2.version}</version>
+          <version>2.4.240</version>
           <scope>runtime</scope>
         </dependency>
         <!-- The Arquillian connector for GlassFish. This lets Arquillian
@@ -230,11 +244,17 @@
           <version>1.0.0.Alpha1</version>
           <scope>test</scope>
         </dependency>
-        <!-- This dependency is required to replace a milestone dependency of
-          arquillian-glassfish-managed-6 which isn't deployed in Maven Central -->
+        <!-- These dependencies replace milestone transitive deps of
+          arquillian-glassfish-managed-6 which aren't deployed in Maven Central -->
         <dependency>
           <groupId>org.glassfish.jersey.inject</groupId>
           <artifactId>jersey-hk2</artifactId>
+          <version>3.1.10</version>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.glassfish.jersey.media</groupId>
+          <artifactId>jersey-media-multipart</artifactId>
           <version>3.1.10</version>
           <scope>test</scope>
         </dependency>
@@ -244,7 +264,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>${surefire.version}</version>
+            <version>3.5.2</version>
             <configuration>
               <systemPropertyVariables>
                 <arquillian.launch>glassfish</arquillian.launch>
@@ -257,7 +277,7 @@
           <plugin>
             <groupId>org.codehaus.cargo</groupId>
             <artifactId>cargo-maven3-plugin</artifactId>
-            <version>${cargo.plugin.version}</version>
+            <version>1.10.28</version>
             <configuration>
               <container>
                 <containerId>glassfish7x</containerId>
@@ -274,7 +294,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
-            <version>${dependency.plugin.version}</version>
+            <version>3.11.0</version>
             <executions>
               <execution>
                 <id>unpack</id>
@@ -300,7 +320,7 @@
           <!-- This modifies configuration of GlassFish for tests - changes the HTTP port to 9090 -->
           <plugin>
             <artifactId>maven-antrun-plugin</artifactId>
-            <version>3.1.0</version>
+            <version>3.2.0</version>
             <executions>
               <execution>
                 <phase>process-test-classes</phase>
@@ -344,7 +364,7 @@
         <dependency>
           <groupId>com.h2database</groupId>
           <artifactId>h2</artifactId>
-          <version>${h2.version}</version>
+          <version>2.4.240</version>
           <scope>test</scope>
         </dependency>
         <dependency>
@@ -356,13 +376,13 @@
         <dependency>
           <groupId>fish.payara.arquillian</groupId>
           <artifactId>arquillian-payara-micro-managed</artifactId>
-          <version>${payara.arquillian.adapter.version}</version>
+          <version>3.1</version>
           <scope>test</scope>
         </dependency>
         <dependency>
           <groupId>fish.payara.arquillian</groupId>
           <artifactId>payara-client-ee9</artifactId>
-          <version>${payara.arquillian.adapter.version}</version>
+          <version>3.1</version>
           <scope>test</scope>
         </dependency>
       </dependencies>
@@ -371,7 +391,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
-            <version>${dependency.plugin.version}</version>
+            <version>3.11.0</version>
             <executions>
               <execution>
                 <id>copy</id>
@@ -412,7 +432,7 @@
         <dependency>
           <groupId>org.hsqldb</groupId>
           <artifactId>hsqldb</artifactId>
-          <version>2.7.3</version>
+          <version>2.7.4</version>
           <scope>provided</scope>
         </dependency>
         <dependency>
@@ -429,7 +449,7 @@
           <plugin>
             <groupId>io.openliberty.tools</groupId>
             <artifactId>liberty-maven-plugin</artifactId>
-            <version>3.11.3</version>
+            <version>3.12.1</version>
             <configuration>
               <copyDependencies>
                 <dependencyGroup>
@@ -455,7 +475,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>${surefire.version}</version>
+            <version>3.5.2</version>
             <configuration>
               <systemPropertyVariables>
                 <arquillian.launch>openliberty</arquillian.launch>

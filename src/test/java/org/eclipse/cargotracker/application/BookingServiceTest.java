@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Random;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Random;
 import org.eclipse.cargotracker.application.internal.DefaultBookingService;
 import org.eclipse.cargotracker.application.util.DateConverter;
 import org.eclipse.cargotracker.application.util.RestConfiguration;
@@ -44,7 +44,6 @@ import org.eclipse.cargotracker.domain.model.voyage.VoyageRepository;
 import org.eclipse.cargotracker.domain.service.RoutingService;
 import org.eclipse.cargotracker.domain.shared.AbstractSpecification;
 import org.eclipse.cargotracker.domain.shared.AndSpecification;
-import org.eclipse.cargotracker.domain.shared.DomainObjectUtils;
 import org.eclipse.cargotracker.domain.shared.NotSpecification;
 import org.eclipse.cargotracker.domain.shared.OrSpecification;
 import org.eclipse.cargotracker.domain.shared.Specification;
@@ -89,83 +88,87 @@ public class BookingServiceTest {
 
     String launch = System.getProperty("arquillian.launch", "payara");
     String webXml = launch.equals("openliberty") ? "test-liberty-web.xml" : "test-web.xml";
-    String[] dependencies = launch.equals("openliberty") ?
-               new String[] { "org.apache.commons:commons-lang3" } :
-               new String[] { "org.apache.commons:commons-lang3", "com.h2database:h2"};
-    
-    return ShrinkWrap.create(WebArchive.class, "cargo-tracker-test.war")
-        // Application layer component directly under test.
-        .addClass(BookingService.class)
-        // Domain layer components.
-        .addClass(TrackingId.class)
-        .addClass(UnLocode.class)
-        .addClass(Itinerary.class)
-        .addClass(Leg.class)
-        .addClass(Voyage.class)
-        .addClass(VoyageNumber.class)
-        .addClass(Schedule.class)
-        .addClass(CarrierMovement.class)
-        .addClass(Location.class)
-        .addClass(HandlingEvent.class)
-        .addClass(Cargo.class)
-        .addClass(RouteSpecification.class)
-        .addClass(AbstractSpecification.class)
-        .addClass(Specification.class)
-        .addClass(AndSpecification.class)
-        .addClass(OrSpecification.class)
-        .addClass(NotSpecification.class)
-        .addClass(Delivery.class)
-        .addClass(TransportStatus.class)
-        .addClass(HandlingActivity.class)
-        .addClass(RoutingStatus.class)
-        .addClass(HandlingHistory.class)
-        .addClass(DomainObjectUtils.class)
-        .addClass(CargoRepository.class)
-        .addClass(LocationRepository.class)
-        .addClass(VoyageRepository.class)
-        .addClass(HandlingEventRepository.class)
-        .addClass(HandlingEventFactory.class)
-        .addClass(CannotCreateHandlingEventException.class)
-        .addClass(UnknownCargoException.class)
-        .addClass(UnknownVoyageException.class)
-        .addClass(UnknownLocationException.class)
-        .addClass(RoutingService.class)
-        // Application layer components
-        .addClass(DefaultBookingService.class)
-        .addClass(DateConverter.class)
-        .addClass(RestConfiguration.class)
-        // Infrastructure layer components.
-        .addClass(JpaCargoRepository.class)
-        .addClass(JpaVoyageRepository.class)
-        .addClass(JpaHandlingEventRepository.class)
-        .addClass(JpaLocationRepository.class)
-        .addClass(ExternalRoutingService.class)
-        .addClass(LoggerProducer.class)
-        // Interface components
-        .addClass(TransitPath.class)
-        .addClass(TransitEdge.class)
-        // Third-party system simulator
-        .addClass(GraphTraversalService.class)
-        .addClass(GraphDao.class)
-        // Sample data.
-        .addClass(BookingServiceTestDataGenerator.class)
-        .addClass(SampleLocations.class)
-        .addClass(SampleVoyages.class)
-        // Persistence unit descriptor
-        .addAsResource("test-persistence.xml", "META-INF/persistence.xml")
-        // Web application descriptor
-        .addAsWebInfResource(webXml, "web.xml")
-        // Bean archive descriptor
-        .addAsWebInfResource("test-beans.xml", "beans.xml")
-        // Library dependencies
-        .addAsLibraries(
-            Maven.resolver()
-                .loadPomFromFile("pom.xml")
-                .resolve(dependencies)
-                .withTransitivity()
-                .asFile());
+    String[] dependencies =
+        launch.equals("openliberty") ? new String[] {} : new String[] {"com.h2database:h2"};
+
+    WebArchive archive =
+        ShrinkWrap.create(WebArchive.class, "cargo-tracker-test.war")
+            // Application layer component directly under test.
+            .addClass(BookingService.class)
+            // Domain layer components.
+            .addClass(TrackingId.class)
+            .addClass(UnLocode.class)
+            .addClass(Itinerary.class)
+            .addClass(Leg.class)
+            .addClass(Voyage.class)
+            .addClass(VoyageNumber.class)
+            .addClass(Schedule.class)
+            .addClass(CarrierMovement.class)
+            .addClass(Location.class)
+            .addClass(HandlingEvent.class)
+            .addClass(Cargo.class)
+            .addClass(RouteSpecification.class)
+            .addClass(AbstractSpecification.class)
+            .addClass(Specification.class)
+            .addClass(AndSpecification.class)
+            .addClass(OrSpecification.class)
+            .addClass(NotSpecification.class)
+            .addClass(Delivery.class)
+            .addClass(TransportStatus.class)
+            .addClass(HandlingActivity.class)
+            .addClass(RoutingStatus.class)
+            .addClass(HandlingHistory.class)
+            .addClass(CargoRepository.class)
+            .addClass(LocationRepository.class)
+            .addClass(VoyageRepository.class)
+            .addClass(HandlingEventRepository.class)
+            .addClass(HandlingEventFactory.class)
+            .addClass(CannotCreateHandlingEventException.class)
+            .addClass(UnknownCargoException.class)
+            .addClass(UnknownVoyageException.class)
+            .addClass(UnknownLocationException.class)
+            .addClass(RoutingService.class)
+            // Application layer components
+            .addClass(DefaultBookingService.class)
+            .addClass(DateConverter.class)
+            .addClass(RestConfiguration.class)
+            // Infrastructure layer components.
+            .addClass(JpaCargoRepository.class)
+            .addClass(JpaVoyageRepository.class)
+            .addClass(JpaHandlingEventRepository.class)
+            .addClass(JpaLocationRepository.class)
+            .addClass(ExternalRoutingService.class)
+            .addClass(LoggerProducer.class)
+            // Interface components
+            .addClass(TransitPath.class)
+            .addClass(TransitEdge.class)
+            // Third-party system simulator
+            .addClass(GraphTraversalService.class)
+            .addClass(GraphDao.class)
+            // Sample data.
+            .addClass(BookingServiceTestDataGenerator.class)
+            .addClass(SampleLocations.class)
+            .addClass(SampleVoyages.class)
+            // Persistence unit descriptor
+            .addAsResource("test-persistence.xml", "META-INF/persistence.xml")
+            // Web application descriptor
+            .addAsWebInfResource(webXml, "web.xml")
+            // Bean archive descriptor
+            .addAsWebInfResource("test-beans.xml", "beans.xml");
+
+    // Only bundle external libraries when the target runtime needs them.
+    if (dependencies.length > 0) {
+      archive.addAsLibraries(
+          Maven.resolver()
+              .loadPomFromFile("pom.xml")
+              .resolve(dependencies)
+              .withTransitivity()
+              .asFile());
+    }
+
+    return archive;
   }
-  
+
   @Test
   @Order(1)
   public void testRegisterNew() {

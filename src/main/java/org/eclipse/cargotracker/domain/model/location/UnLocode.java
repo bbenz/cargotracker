@@ -1,10 +1,10 @@
 package org.eclipse.cargotracker.domain.model.location;
 
-import java.io.Serializable;
 import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
-import org.apache.commons.lang3.Validate;
+import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * United nations location code.
@@ -31,17 +31,22 @@ public class UnLocode implements Serializable {
     // Nothing to initialize.
   }
 
-  /** @param countryAndLocation Location string. */
+  /**
+   * @param countryAndLocation Location string.
+   */
   public UnLocode(String countryAndLocation) {
-    Validate.notNull(countryAndLocation, "Country and location may not be null.");
-    Validate.isTrue(
-        VALID_PATTERN.matcher(countryAndLocation).matches(),
-        countryAndLocation + " is not a valid UN/LOCODE (does not match pattern)");
+    Objects.requireNonNull(countryAndLocation, "Country and location may not be null.");
+    if (!VALID_PATTERN.matcher(countryAndLocation).matches()) {
+      throw new IllegalArgumentException(
+          countryAndLocation + " is not a valid UN/LOCODE (does not match pattern)");
+    }
 
     this.unlocode = countryAndLocation.toUpperCase();
   }
 
-  /** @return country code and location code concatenated, always upper case. */
+  /**
+   * @return country code and location code concatenated, always upper case.
+   */
   public String getIdString() {
     return unlocode;
   }
@@ -52,7 +57,7 @@ public class UnLocode implements Serializable {
       return true;
     }
 
-    if (o == null || !(o instanceof UnLocode)) {
+    if (!(o instanceof UnLocode)) {
       return false;
     }
 
@@ -63,11 +68,11 @@ public class UnLocode implements Serializable {
 
   @Override
   public int hashCode() {
-    return unlocode.hashCode();
+    return Objects.hash(unlocode);
   }
 
   boolean sameValueAs(UnLocode other) {
-    return other != null && this.unlocode.equals(other.unlocode);
+    return other != null && Objects.equals(this.unlocode, other.unlocode);
   }
 
   @Override

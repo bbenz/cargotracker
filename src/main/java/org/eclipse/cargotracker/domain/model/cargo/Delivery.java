@@ -9,10 +9,6 @@ import static org.eclipse.cargotracker.domain.model.cargo.TransportStatus.NOT_RE
 import static org.eclipse.cargotracker.domain.model.cargo.TransportStatus.ONBOARD_CARRIER;
 import static org.eclipse.cargotracker.domain.model.cargo.TransportStatus.UNKNOWN;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Iterator;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -21,14 +17,15 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
-import org.apache.commons.lang3.Validate;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Iterator;
+import java.util.Objects;
 import org.eclipse.cargotracker.domain.model.handling.HandlingEvent;
 import org.eclipse.cargotracker.domain.model.handling.HandlingHistory;
 import org.eclipse.cargotracker.domain.model.location.Location;
 import org.eclipse.cargotracker.domain.model.voyage.Voyage;
-import org.eclipse.cargotracker.domain.shared.DomainObjectUtils;
 
 /**
  * The actual transportation of the cargo, as opposed to the customer requirement
@@ -111,8 +108,8 @@ public class Delivery implements Serializable {
    */
   static Delivery derivedFrom(
       RouteSpecification routeSpecification, Itinerary itinerary, HandlingHistory handlingHistory) {
-    Validate.notNull(routeSpecification, "Route specification is required");
-    Validate.notNull(handlingHistory, "Delivery history is required");
+    Objects.requireNonNull(routeSpecification, "Route specification is required");
+    Objects.requireNonNull(handlingHistory, "Delivery history is required");
 
     HandlingEvent lastEvent = handlingHistory.getMostRecentlyCompletedEvent();
 
@@ -125,7 +122,7 @@ public class Delivery implements Serializable {
    * performed.
    */
   Delivery updateOnRouting(RouteSpecification routeSpecification, Itinerary itinerary) {
-    Validate.notNull(routeSpecification, "Route specification is required");
+    Objects.requireNonNull(routeSpecification, "Route specification is required");
 
     return new Delivery(this.lastEvent, itinerary, routeSpecification);
   }
@@ -139,7 +136,7 @@ public class Delivery implements Serializable {
   }
 
   public Location getLastKnownLocation() {
-    return DomainObjectUtils.nullSafe(lastKnownLocation, Location.UNKNOWN);
+    return this.lastKnownLocation == null ? Location.UNKNOWN : this.lastKnownLocation;
   }
 
   public void setLastKnownLocation(Location lastKnownLocation) {
@@ -151,7 +148,7 @@ public class Delivery implements Serializable {
   }
 
   public Voyage getCurrentVoyage() {
-    return DomainObjectUtils.nullSafe(currentVoyage, Voyage.NONE);
+    return this.currentVoyage == null ? Voyage.NONE : this.currentVoyage;
   }
 
   /**
@@ -183,7 +180,9 @@ public class Delivery implements Serializable {
     return nextExpectedActivity;
   }
 
-  /** @return True if the cargo has been unloaded at the final destination. */
+  /**
+   * @return True if the cargo has been unloaded at the final destination.
+   */
   public boolean isUnloadedAtDestination() {
     return isUnloadedAtDestination;
   }
@@ -336,18 +335,16 @@ public class Delivery implements Serializable {
 
   private boolean sameValueAs(Delivery other) {
     return other != null
-        && new EqualsBuilder()
-            .append(this.transportStatus, other.transportStatus)
-            .append(this.lastKnownLocation, other.lastKnownLocation)
-            .append(this.currentVoyage, other.currentVoyage)
-            .append(this.misdirected, other.misdirected)
-            .append(this.eta, other.eta)
-            .append(this.nextExpectedActivity, other.nextExpectedActivity)
-            .append(this.isUnloadedAtDestination, other.isUnloadedAtDestination)
-            .append(this.routingStatus, other.routingStatus)
-            .append(this.calculatedAt, other.calculatedAt)
-            .append(this.lastEvent, other.lastEvent)
-            .isEquals();
+        && Objects.equals(this.transportStatus, other.transportStatus)
+        && Objects.equals(this.lastKnownLocation, other.lastKnownLocation)
+        && Objects.equals(this.currentVoyage, other.currentVoyage)
+        && this.misdirected == other.misdirected
+        && Objects.equals(this.eta, other.eta)
+        && Objects.equals(this.nextExpectedActivity, other.nextExpectedActivity)
+        && this.isUnloadedAtDestination == other.isUnloadedAtDestination
+        && Objects.equals(this.routingStatus, other.routingStatus)
+        && Objects.equals(this.calculatedAt, other.calculatedAt)
+        && Objects.equals(this.lastEvent, other.lastEvent);
   }
 
   @Override
@@ -366,17 +363,16 @@ public class Delivery implements Serializable {
 
   @Override
   public int hashCode() {
-    return new HashCodeBuilder()
-        .append(transportStatus)
-        .append(lastKnownLocation)
-        .append(currentVoyage)
-        .append(misdirected)
-        .append(eta)
-        .append(nextExpectedActivity)
-        .append(isUnloadedAtDestination)
-        .append(routingStatus)
-        .append(calculatedAt)
-        .append(lastEvent)
-        .toHashCode();
+    return Objects.hash(
+        transportStatus,
+        lastKnownLocation,
+        currentVoyage,
+        misdirected,
+        eta,
+        nextExpectedActivity,
+        isUnloadedAtDestination,
+        routingStatus,
+        calculatedAt,
+        lastEvent);
   }
 }

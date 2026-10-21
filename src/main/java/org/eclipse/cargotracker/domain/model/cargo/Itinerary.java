@@ -1,9 +1,5 @@
 package org.eclipse.cargotracker.domain.model.cargo;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
@@ -11,7 +7,11 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
-import org.apache.commons.lang3.Validate;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import org.eclipse.cargotracker.domain.model.handling.HandlingEvent;
 import org.eclipse.cargotracker.domain.model.location.Location;
 
@@ -23,23 +23,28 @@ public class Itinerary implements Serializable {
   // Null object pattern.
   public static final Itinerary EMPTY_ITINERARY = new Itinerary();
 
-  // TODO [Clean Code] Look into why cascade delete doesn't work.
+  // TODO Look into why cascade delete doesn't work.
   @OneToMany(cascade = CascadeType.ALL)
   @JoinColumn(name = "cargo_id")
   @OrderColumn(name = "leg_order")
   @Size(min = 1)
   @NotEmpty(message = "Legs must not be empty.")
-  private List<Leg> legs = Collections.emptyList();
+  private List<Leg> legs = List.of();
 
   public Itinerary() {
     // Nothing to initialize.
   }
 
   public Itinerary(List<Leg> legs) {
-    Validate.notEmpty(legs);
-    Validate.noNullElements(legs);
+    Objects.requireNonNull(legs, "Legs are required.");
+    if (legs.isEmpty()) {
+      throw new IllegalArgumentException("Legs must not be empty.");
+    }
+    if (legs.stream().anyMatch(Objects::isNull)) {
+      throw new IllegalArgumentException("Legs must not contain null elements.");
+    }
 
-    this.legs = legs;
+    this.legs = List.copyOf(legs);
   }
 
   public List<Leg> getLegs() {
@@ -115,7 +120,9 @@ public class Itinerary implements Serializable {
     }
   }
 
-  /** @return Date when cargo arrives at final destination. */
+  /**
+   * @return Date when cargo arrives at final destination.
+   */
   LocalDateTime getFinalArrivalDate() {
     Leg lastLeg = getLastLeg();
 
@@ -126,7 +133,9 @@ public class Itinerary implements Serializable {
     }
   }
 
-  /** @return The last leg on the itinerary. */
+  /**
+   * @return The last leg on the itinerary.
+   */
   Leg getLastLeg() {
     if (legs.isEmpty()) {
       return null;

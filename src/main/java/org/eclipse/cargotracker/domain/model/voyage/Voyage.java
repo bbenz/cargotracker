@@ -1,16 +1,16 @@
 package org.eclipse.cargotracker.domain.model.voyage;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedQuery;
 import jakarta.validation.constraints.NotNull;
-import org.apache.commons.lang3.Validate;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import org.eclipse.cargotracker.domain.model.location.Location;
 
 @Entity
@@ -39,8 +39,8 @@ public class Voyage implements Serializable {
   }
 
   public Voyage(VoyageNumber voyageNumber, Schedule schedule) {
-    Validate.notNull(voyageNumber, "Voyage number is required.");
-    Validate.notNull(schedule, "Schedule is required.");
+    Objects.requireNonNull(voyageNumber, "Voyage number is required.");
+    Objects.requireNonNull(schedule, "Schedule is required.");
 
     this.voyageNumber = voyageNumber;
     this.schedule = schedule;
@@ -98,8 +98,8 @@ public class Voyage implements Serializable {
     private Location departureLocation;
 
     public Builder(VoyageNumber voyageNumber, Location departureLocation) {
-      Validate.notNull(voyageNumber, "Voyage number is required");
-      Validate.notNull(departureLocation, "Departure location is required");
+      Objects.requireNonNull(voyageNumber, "Voyage number is required");
+      Objects.requireNonNull(departureLocation, "Departure location is required");
 
       this.voyageNumber = voyageNumber;
       this.departureLocation = departureLocation;
