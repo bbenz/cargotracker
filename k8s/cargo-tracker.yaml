@@ -1,9 +1,13 @@
+# One replica, because the sample keeps its data in an in-memory database.
+# The deploy script replaces the image name with the one in your registry.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cargo-tracker
+  namespace: cargo-tracker
 spec:
-  replicas: 2
+  replicas: 1
+  revisionHistoryLimit: 5
   selector:
     matchLabels:
       app: cargo-tracker
@@ -14,7 +18,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: ghcr.io/example/cargo-tracker:2.4.1
+        image: cargo-tracker-ai:local
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
@@ -24,32 +28,54 @@ spec:
         env:
         - name: AI_ENABLED
           valueFrom: { configMapKeyRef: { name: ai-config, key: enabled } }
-        - name: AI_CHAT_MODEL
-          valueFrom: { configMapKeyRef: { name: ai-config, key: chat-model } }
-        - name: AI_API_KEY
-          valueFrom: { secretKeyRef: { name: ai-endpoint, key: api-key } }
         - name: AI_BASE_URL
           valueFrom: { configMapKeyRef: { name: ai-config, key: base-url } }
+        - name: AI_API
+          valueFrom: { configMapKeyRef: { name: ai-config, key: api } }
+        - name: AI_CHAT_MODEL
+          valueFrom: { configMapKeyRef: { name: ai-config, key: chat-model } }
+        - name: AI_REASONING_EFFORT
+          valueFrom: { configMapKeyRef: { name: ai-config, key: reasoning-effort } }
         - name: AI_TIMEOUT_SECONDS
           valueFrom: { configMapKeyRef: { name: ai-config, key: timeout-seconds } }
         - name: AI_DOCS_DIR
           valueFrom: { configMapKeyRef: { name: ai-config, key: docs-dir } }
+        - name: AI_API_KEY
+          valueFrom: { secretKeyRef: { name: ai-endpoint, key: api-key } }
+        startupProbe:
+          httpGet:
+            path: /health/started
+            port: http
+          periodSeconds: 5
+          failureThreshold: 60
         readinessProbe:
           httpGet:
             path: /health/ready
             port: http
-          initialDelaySeconds: 20
           periodSeconds: 10
         livenessProbe:
           httpGet:
             path: /health/live
             port: http
-          initialDelaySeconds: 60
           periodSeconds: 20
         resources:
           requests:
-            cpu: 250m
-            memory: 768Mi
+            cpu: 500m
+            memory: 1Gi
           limits:
-            cpu: "1"
-            memory: 1536Mi
+            cpu: "2"
+            memory: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cargo-tracker
+  namespace: cargo-tracker
+spec:
+  type: ClusterIP
+  selector:
+    app: cargo-tracker
+  ports:
+  - name: http
+    port: 80
+    targetPort: http

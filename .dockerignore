@@ -5,3 +5,7 @@ target
 .vscode
 *.log
 cargo-tracker-data
+.env
+*.env
+k8s
+deploy

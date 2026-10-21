@@ -7,7 +7,7 @@ on:
     - src/main/ai-docs/**
     - src/main/java/org/eclipse/cargotracker/ai/**
     - src/test/resources/eval/**
-    - k8s/configmap.yaml
+    - k8s/ai-config.yaml
   workflow_dispatch:
 
 jobs:
@@ -32,16 +32,19 @@ jobs:
         else
           echo "run_eval=true" >> "$GITHUB_OUTPUT"
         fi
-    - name: Read model from Kubernetes config
+    - name: Read the model settings from the Kubernetes config
       if: steps.secrets.outputs.run_eval == 'true'
-      id: model
       run: |
-        model=$(yq '.data."chat-model"' k8s/configmap.yaml)
-        echo "AI_CHAT_MODEL=$model" >> "$GITHUB_ENV"
-        echo "model=$model" >> "$GITHUB_OUTPUT"
+        echo "AI_CHAT_MODEL=$(yq '.data."chat-model"' k8s/ai-config.yaml)" >> "$GITHUB_ENV"
+        echo "AI_API=$(yq '.data.api' k8s/ai-config.yaml)" >> "$GITHUB_ENV"
+        echo "AI_REASONING_EFFORT=$(yq '.data."reasoning-effort"' k8s/ai-config.yaml)" >> "$GITHUB_ENV"
+        echo "AI_TIMEOUT_SECONDS=$(yq '.data."timeout-seconds"' k8s/ai-config.yaml)" >> "$GITHUB_ENV"
     - name: Run eval tests
       if: steps.secrets.outputs.run_eval == 'true'
       env:
         AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
         AI_API_KEY: ${{ secrets.AI_API_KEY }}
+        # Gates for gpt-6.1-sol. The defaults in the test match the talk: 4 seconds and 2,500 tokens.
+        EVAL_P95_MILLIS: ${{ vars.EVAL_P95_MILLIS || '15000' }}
+        EVAL_MAX_TOKENS: ${{ vars.EVAL_MAX_TOKENS || '3500' }}
       run: mvn -B -Popenliberty -Dtest=CargoAssistantEvalTest test

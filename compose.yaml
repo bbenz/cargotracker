@@ -1,0 +1,65 @@
+# Cargo Tracker with the shipment dashboard and the guarded assistant.
+#
+#   docker compose up --build
+#
+# Then open http://localhost:8080/cargo-tracker/dashboard/ and http://localhost:16686 for traces.
+# Set APP_PORT or JAEGER_PORT in .env if those ports are taken on your machine.
+# Model settings come from .env. Copy .env.example to .env first. Without a key the assistant
+# stays off and the rest of the app still works.
+
+name: cargo-tracker-ai
+
+services:
+  cargo-tracker:
+    build: .
+    image: cargo-tracker-ai:local
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      AI_ENABLED: ${AI_ENABLED:-false}
+      AI_BASE_URL: ${AI_BASE_URL:-https://api.openai.com/v1}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_API: ${AI_API:-responses}
+      AI_CHAT_MODEL: ${AI_CHAT_MODEL:-gpt-6.1-sol}
+      AI_REASONING_EFFORT: ${AI_REASONING_EFFORT:-}
+      AI_TIMEOUT_SECONDS: ${AI_TIMEOUT_SECONDS:-20}
+      DEMO_FLEET_ENABLED: ${DEMO_FLEET_ENABLED:-true}
+      DEMO_TRAFFIC_ENABLED: ${DEMO_TRAFFIC_ENABLED:-false}
+      DEMO_TRAFFIC_INTERVAL_SECONDS: ${DEMO_TRAFFIC_INTERVAL_SECONDS:-20}
+      # The dashboard links each answer to its trace. {traceId} is filled in by the page.
+      DASHBOARD_TRACE_URL: "http://localhost:${JAEGER_PORT:-16686}/trace/{traceId}"
+      OTEL_SDK_DISABLED: "false"
+      OTEL_SERVICE_NAME: cargo-tracker
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+    depends_on:
+      - jaeger
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 30
+    restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/jaeger:2.22.0
+    ports:
+      - "${JAEGER_PORT:-16686}:16686"
+    restart: unless-stopped
+
+  # Optional local model, for a demo without internet access:
+  #   docker compose --profile local-model up -d
+  #   docker compose exec ollama ollama pull qwen3:4b
+  # Then set AI_BASE_URL=http://ollama:11434/v1, AI_API=chat-completions, AI_API_KEY=ollama,
+  # AI_CHAT_MODEL=qwen3:4b, and AI_REASONING_EFFORT= (empty) in .env.
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["local-model"]
+    volumes:
+      - ollama:/root/.ollama
+
+volumes:
+  ollama:

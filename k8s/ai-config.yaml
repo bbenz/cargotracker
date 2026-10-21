@@ -1,0 +1,16 @@
+# Model settings. Change one value and restart the deployment to switch models, change the
+# timeout, or turn the assistant off. No new image is needed. deploy/aks/deploy.ps1 fills
+# base-url and chat-model from your .env file.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-config
+  namespace: cargo-tracker
+data:
+  enabled: "true"
+  base-url: https://YOUR-RESOURCE.services.ai.azure.com/openai/v1/
+  api: responses
+  chat-model: gpt-6.1-sol
+  reasoning-effort: low
+  timeout-seconds: "20"
+  docs-dir: /config/ai-docs
