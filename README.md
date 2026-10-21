@@ -147,7 +147,7 @@ $env:EVAL_P95_MILLIS = "15000"; $env:EVAL_MAX_TOKENS = "3500"
 | Answers in time | 95th percentile under `EVAL_P95_MILLIS`, 4,000 by default |
 | Costs what we expect | Tokens per answer under `EVAL_MAX_TOKENS`, 2,500 by default |
 
-The defaults match the table in the talk. With `gpt-6.1-sol`, answers take 6 to 12 seconds and up to about 3,000 tokens, so the time and cost checks fail with the defaults. That is the point of the gates: a model change becomes a visible decision. Set `EVAL_LIMIT=10` to run fewer questions during a live demo.
+The defaults match the table in the talk. With `gpt-6.1-sol`, the 95th percentile time was 8.8 to 20 seconds across our full runs, and the largest answers used about 3,100 tokens. So the time and cost checks fail with the defaults. That is the point of the gates: a model change becomes a visible decision. If one model call takes longer than `AI_TIMEOUT_SECONDS`, that answer is the fallback with no source, so the source and valid-data checks fail too. Set `EVAL_LIMIT=10` to run fewer questions during a live demo.
 
 Then open a trace from the **Open trace** link under an answer. You see the REST request, the document search, each model call with its tokens, and each tool call.
 
