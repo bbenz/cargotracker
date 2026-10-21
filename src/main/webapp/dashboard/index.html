@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cargo Tracker - Shipment dashboard</title>
+  <link rel="icon" href="../resources/images/CTlogobadge128.png">
+  <link rel="stylesheet" href="../resources/leaflet/leaflet.css">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../index.xhtml" title="Back to Cargo Tracker">
+      <img src="../resources/images/CTlogobadge128.png" alt="" class="logo">
+      <span>
+        <span class="title">Cargo Tracker</span>
+        <span class="subtitle">Shipment dashboard</span>
+      </span>
+    </a>
+    <div class="topbar-right">
+      <div class="traffic" title="Reports the next planned handling event, the way a port system would">
+        <label class="switch">
+          <input type="checkbox" id="traffic-toggle">
+          <span class="slider"></span>
+          <span class="switch-label">Live traffic</span>
+        </label>
+        <button id="traffic-step" class="ghost small" type="button">Next event</button>
+      </div>
+      <span id="live-pill" class="pill">Connecting</span>
+      <span id="ai-pill" class="pill" title="Assistant status">Assistant</span>
+      <span id="clock" class="clock"></span>
+    </div>
+  </header>
+
+  <section class="kpis">
+    <button class="kpi" data-filter="all" type="button">
+      <span class="kpi-value" id="kpi-all">-</span><span class="kpi-label">Shipments</span>
+    </button>
+    <button class="kpi transit" data-filter="transit" type="button">
+      <span class="kpi-value" id="kpi-transit">-</span><span class="kpi-label">In transit</span>
+    </button>
+    <button class="kpi port" data-filter="port" type="button">
+      <span class="kpi-value" id="kpi-port">-</span><span class="kpi-label">In port</span>
+    </button>
+    <button class="kpi booked" data-filter="booked" type="button">
+      <span class="kpi-value" id="kpi-booked">-</span><span class="kpi-label">Booked</span>
+    </button>
+    <button class="kpi done" data-filter="done" type="button">
+      <span class="kpi-value" id="kpi-done">-</span><span class="kpi-label">Delivered</span>
+    </button>
+    <button class="kpi attention" data-filter="attention" type="button">
+      <span class="kpi-value" id="kpi-attention">-</span><span class="kpi-label">Needs attention</span>
+    </button>
+  </section>
+
+  <main class="layout">
+    <section class="map-panel">
+      <div id="map" aria-label="World map of shipments"></div>
+      <div class="map-toolbar">
+        <div class="projection">
+          <button id="play" class="ghost small" type="button" title="Show where ships will be over the next four days">Play 4 days</button>
+          <input type="range" id="projection" min="0" max="96" step="1" value="0" aria-label="Hours from now">
+          <span id="projection-label" class="projection-label">Now</span>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="dot transit"></i>In transit</span>
+        <span><i class="dot port"></i>In port</span>
+        <span><i class="dot booked"></i>Booked</span>
+        <span><i class="dot warning"></i>Late or not routed</span>
+        <span><i class="dot critical"></i>Misdirected or misrouted</span>
+        <span><i class="dot highlight"></i>In the answer</span>
+      </div>
+      <div id="details" class="details hidden" aria-live="polite"></div>
+    </section>
+
+    <aside class="side">
+      <section class="card assistant">
+        <div class="card-head">
+          <h2>Ask about shipments</h2>
+          <span id="ai-stats" class="muted small"></span>
+        </div>
+        <form id="ask-form" autocomplete="off">
+          <input id="question" type="text" maxlength="500" placeholder="Which shipments need attention, and why?">
+          <button type="submit" id="ask-button">Ask</button>
+        </form>
+        <div class="suggestions" id="suggestions"></div>
+        <div id="answer" class="answer empty">
+          Answers come from the cargo data and the shipping documents. Shipments in an answer light up on the map.
+        </div>
+      </section>
+
+      <section class="card attention-card">
+        <div class="card-head">
+          <h2>Needs attention</h2>
+          <span id="attention-count" class="count"></span>
+        </div>
+        <ul id="attention-list" class="list"></ul>
+      </section>
+
+      <section class="card feed-card">
+        <div class="card-head">
+          <h2>Live events</h2>
+          <span class="muted small">From handling reports</span>
+        </div>
+        <ul id="feed" class="list feed"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <section class="card table-card">
+    <div class="card-head">
+      <h2>All shipments</h2>
+      <div class="table-tools">
+        <span id="filter-label" class="muted small"></span>
+        <input id="search" type="search" placeholder="Filter by tracking ID or city">
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="shipments">
+        <thead>
+          <tr>
+            <th>Tracking ID</th><th>Route</th><th>Status</th><th>Where now</th><th>Next step</th><th>ETA</th><th>Deadline</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-body">
+      <div class="modal-head">
+        <h3 id="modal-title"></h3>
+        <button type="button" class="ghost small" id="modal-close">Close</button>
+      </div>
+      <pre id="modal-text"></pre>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script src="../resources/leaflet/leaflet.js"></script>
+  <script src="sea-lanes.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
