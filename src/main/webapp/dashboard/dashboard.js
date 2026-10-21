@@ -272,8 +272,8 @@
   function drawBasemap() {
     drawGraticule();
     Promise.all([
-      fetch('data/land.json').then(function (r) { return r.json(); }),
-      fetch('data/lakes.json').then(function (r) { return r.json(); })
+      fetch('map/land.json').then(function (r) { return r.json(); }),
+      fetch('map/lakes.json').then(function (r) { return r.json(); })
     ]).then(function (data) {
       OFFSETS.forEach(function (dx) {
         L.geoJSON(shifted(data[0], dx), {
